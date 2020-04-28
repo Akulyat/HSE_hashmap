@@ -15,28 +15,28 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 
  private:
 	size_t capacity = 1;
-	size_t size_ = 0;
+	size_t sz = 0;
 
 	MyList elementList;
 	std::vector<iterator> hashStart = std::vector<iterator>(capacity, elementList.end());
 	Hash hasher;
 
-	size_t hash_place(const KeyType &key) const {
+	size_t hashPlace(const KeyType &key) const {
 		return hasher(key) % capacity;
 	}
 
-	iterator start_it(const KeyType &key) {
-		return hashStart[hash_place(key)];
+	iterator startIt(const KeyType &key) {
+		return hashStart[hashPlace(key)];
 	}
 
-	const_iterator start_it(const KeyType &key) const {
-		return hashStart[hash_place(key)];
+	const_iterator startIt(const KeyType &key) const {
+		return hashStart[hashPlace(key)];
 	}
 
-	iterator it_by_key(const KeyType &key) {
-		iterator myStart = start_it(key);
+	iterator keyIt(const KeyType &key) {
+		iterator myStart = startIt(key);
 		iterator it = myStart;
-		while (it != elementList.end() && start_it((*it).first) == myStart) {
+		while (it != elementList.end() && startIt((*it).first) == myStart) {
 			if ((*it).first == key) {
 				return it;
 			}
@@ -45,10 +45,10 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 		return elementList.end();
 	}
 
-	const_iterator it_by_key(const KeyType &key) const {
-		const_iterator myStart = start_it(key);
+	const_iterator keyIt(const KeyType &key) const {
+		const_iterator myStart = startIt(key);
 		const_iterator it = myStart;
-		while (it != elementList.end() && start_it((*it).first) == myStart) {
+		while (it != elementList.end() && startIt((*it).first) == myStart) {
 			if ((*it).first == key) {
 				return it;
 			}
@@ -58,19 +58,19 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 	}
 
 	bool exist(const KeyType &key) const{
-		return it_by_key(key) != elementList.end();
+		return keyIt(key) != elementList.end();
 	}
 
 	const ValueType& value(const KeyType &key) const {
 		if (exist(key)) {
-			return (*it_by_key(key)).second;
+			return (*keyIt(key)).second;
 		}
 		exit(0);
 	}
 
 	ValueType& value(const KeyType &key) {
 		if (exist(key)) {
-			return (*it_by_key(key)).second;
+			return (*keyIt(key)).second;
 		}
 		exit(0);
 	}
@@ -94,34 +94,34 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 	}
 
 	void inserter(const Element &toAdd) {
-		if (size_ == capacity) {
+		if (sz == capacity) {
 			rehash();
 		}
 
 		KeyType key = toAdd.first;
-		iterator oldStart = start_it(key);
+		iterator oldStart = startIt(key);
 		elementList.insert(oldStart, toAdd);
-		hashStart[hash_place(key)]--;
+		hashStart[hashPlace(key)]--;
 
-		size_++;
+		sz++;
 	}
 
 	void eraser(const KeyType &key) {
-		iterator it = it_by_key(key);
-		iterator start = start_it(key);
+		iterator it = keyIt(key);
+		iterator start = startIt(key);
 		iterator newStart = start;
 		if (start == it) {
 			newStart++;
 			if (newStart != elementList.end()) {
-				if (start_it((*newStart).first) != start) {
+				if (startIt((*newStart).first) != start) {
 					newStart = elementList.end();
 				}
 			}
 		}
-		hashStart[hash_place(key)] = newStart;
+		hashStart[hashPlace(key)] = newStart;
 		elementList.erase(it);
 
-		size_--;
+		sz--;
 	}
 
 
@@ -162,11 +162,11 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 
 
 	size_t size() const {
-		return size_;
+		return sz;
 	}	
 
 	bool empty() const {
-		return size_ == 0;
+		return sz == 0;
 	}	
 
 	Hash hash_function() const {		
@@ -211,11 +211,11 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 	}
 
 	iterator find(const KeyType &key) {
-		return it_by_key(key);
+		return keyIt(key);
 	}
 
 	const_iterator find(const KeyType &key) const {
-		return it_by_key(key);
+		return keyIt(key);
 	}
 
 	ValueType& operator [](const KeyType &key) {
