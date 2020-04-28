@@ -8,17 +8,17 @@
 
 template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class HashMap {
  public:
-	typedef std::pair<const KeyType, ValueType> element;
-	typedef std::list<element> my_list;
-	typedef typename my_list::iterator iterator;
-	typedef typename my_list::const_iterator const_iterator;
+	typedef std::pair<const KeyType, ValueType> Element;
+	typedef std::list<Element> MyList;
+	typedef typename MyList::iterator iterator;
+	typedef typename MyList::const_iterator const_iterator;
 
  private:
 	size_t capacity = 1;
 	size_t size_ = 0;
 
-	my_list list_of_el;
-	std::vector<iterator> start_by_key = std::vector<iterator>(capacity, list_of_el.end());
+	MyList elementList;
+	std::vector<iterator> hashStart = std::vector<iterator>(capacity, elementList.end());
 	Hash hasher;
 
 	size_t hash_place(const KeyType &key) const {
@@ -26,77 +26,82 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 	}
 
 	iterator start_it(const KeyType &key) {
-		return start_by_key[hash_place(key)];
+		return hashStart[hash_place(key)];
 	}
 
 	const_iterator start_it(const KeyType &key) const {
-		return start_by_key[hash_place(key)];
+		return hashStart[hash_place(key)];
 	}
 
 	iterator it_by_key(const KeyType &key) {
-		iterator my_start = start_it(key);
-		iterator it = my_start;
-		while (it != list_of_el.end() && start_it((*it).first) == my_start) {
-			if ((*it).first == key)
+		iterator myStart = start_it(key);
+		iterator it = myStart;
+		while (it != elementList.end() && start_it((*it).first) == myStart) {
+			if ((*it).first == key) {
 				return it;
+			}
 			it++;
 		}
-		return list_of_el.end();
+		return elementList.end();
 	}
 
 	const_iterator it_by_key(const KeyType &key) const {
-		const_iterator my_start = start_it(key);
-		const_iterator it = my_start;
-		while (it != list_of_el.end() && start_it((*it).first) == my_start) {
-			if ((*it).first == key)
+		const_iterator myStart = start_it(key);
+		const_iterator it = myStart;
+		while (it != elementList.end() && start_it((*it).first) == myStart) {
+			if ((*it).first == key) {
 				return it;
+			}
 			it++;
 		}
-		return list_of_el.end();
+		return elementList.end();
 	}
 
 	bool exist(const KeyType &key) const{
-		return it_by_key(key) != list_of_el.end();
+		return it_by_key(key) != elementList.end();
 	}
 
 	const ValueType& value(const KeyType &key) const {
-		if (exist(key))
+		if (exist(key)) {
 			return (*it_by_key(key)).second;
+		}
 		exit(0);
 	}
 
 	ValueType& value(const KeyType &key) {
-		if (exist(key))
+		if (exist(key)) {
 			return (*it_by_key(key)).second;
+		}
 		exit(0);
 	}
 
 	void rehash() {
-		size_t new_capacity = capacity * 2;
+		size_t newCapacity = capacity * 2;
 
-		my_list old_list = list_of_el;
-		for (auto p : old_list) {
+		MyList oldList = elementList;
+		for (auto p : oldList) {
 			eraser(p.first);
 		}
 
-		list_of_el.clear();
-		start_by_key.clear();
-		start_by_key.resize(new_capacity, list_of_el.end());
-		capacity = new_capacity;
+		elementList.clear();
+		hashStart.clear();
+		hashStart.resize(newCapacity, elementList.end());
+		capacity = newCapacity;
 
-		for (auto p : old_list) {
+		for (auto p : oldList) {
 			inserter(p);
 		}	
 	}
 
-	void inserter(const element &to_add) {
-		if (size_ == capacity)
+	void inserter(const Element &toAdd) {
+		if (size_ == capacity) {
 			rehash();
+		}
 
-		KeyType key = to_add.first;
-		iterator old_start = start_it(key);
-		list_of_el.insert(old_start, to_add);
-		start_by_key[hash_place(key)]--;
+		KeyType key = toAdd.first;
+		iterator oldStart = start_it(key);
+		elementList.insert(oldStart, toAdd);
+		hashStart[hash_place(key)]--;
 
 		size_++;
 	}
@@ -104,35 +109,37 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 	void eraser(const KeyType &key) {
 		iterator it = it_by_key(key);
 		iterator start = start_it(key);
-		iterator new_start = start;
+		iterator newStart = start;
 		if (start == it) {
-			new_start++;
-			if (new_start != list_of_el.end()) {
-				if (start_it((*new_start).first) != start)
-					new_start = list_of_el.end();
+			newStart++;
+			if (newStart != elementList.end()) {
+				if (start_it((*newStart).first) != start) {
+					newStart = elementList.end();
+				}
 			}
 		}
-		start_by_key[hash_place(key)] = new_start;
-		list_of_el.erase(it);
+		hashStart[hash_place(key)] = newStart;
+		elementList.erase(it);
 
 		size_--;
 	}
 
 
  public:
-	HashMap(Hash new_hasher = Hash()) : hasher(new_hasher) {		
+	HashMap(Hash newHasher = Hash()) : hasher(newHasher) {		
 	}	
 
 	template<class Iter>
-	HashMap(Iter it_begin, Iter it_end, Hash new_hasher = Hash()) : hasher(new_hasher) {
-		for (auto it = it_begin; it != it_end; it++) {
+	HashMap(Iter begin, Iter end, Hash newHasher = Hash()) : hasher(newHasher) {
+		for (auto it = begin; it != end; it++) {
 			insert(*it);
 		}
 	}	
 
-	HashMap(std::initializer_list<element> init_list, Hash new_hasher = Hash()) : hasher(new_hasher) {
-		for (auto it: init_list)
+	HashMap(std::initializer_list<Element> initList, Hash newHasher = Hash()) : hasher(newHasher) {
+		for (auto it: initList) {
 			insert(it);
+		}
 	}	
 
 	HashMap(const HashMap &other) {
@@ -144,11 +151,12 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 	}
 
 	HashMap& operator = (const HashMap &other) {
-		auto to_add = other.list_of_el;
+		auto toAdd = other.elementList;
 		clear();
 		hasher = other.hasher;
-		for (auto p : to_add)
+		for (auto p : toAdd) {
 			inserter(p);
+		}
 		return *this;
 	}
 
@@ -165,38 +173,41 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 		return hasher;
 	}
 
-	void insert(const element &to_add)	{
-		if (exist(to_add.first))
+	void insert(const Element &toAdd)	{
+		if (exist(toAdd.first)) {
 			return;
-		inserter(to_add);		
+		}
+		inserter(toAdd);		
 	}
 
 	void erase(const KeyType &key)	{
-		if (!exist(key))
+		if (!exist(key)) {
 			return;
+		}
 		eraser(key);
 	}
 
 	void clear() {
-		my_list old_list = list_of_el;
-		for (auto p : old_list)
+		MyList oldList = elementList;
+		for (auto p : oldList) {
 			eraser(p.first);
+		}
 	}
 
 	iterator begin() {
-		return list_of_el.begin();
+		return elementList.begin();
 	}
 
 	const_iterator begin() const {
-		return list_of_el.begin();
+		return elementList.begin();
 	}
 
 	iterator end() {
-		return list_of_el.end();
+		return elementList.end();
 	}
 	
 	const_iterator end() const {
-		return list_of_el.end();
+		return elementList.end();
 	}
 
 	iterator find(const KeyType &key) {
@@ -209,7 +220,7 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType> > class
 
 	ValueType& operator [](const KeyType &key) {
 		if (!exist(key)) {
-			insert((element){key, ValueType()});
+			insert((Element){key, ValueType()});
 		}
 		return value(key);
 	}
